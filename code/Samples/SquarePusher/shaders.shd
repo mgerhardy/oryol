@@ -1,0 +1,73 @@
+//------------------------------------------------------------------------------
+//  shaders.shd
+//------------------------------------------------------------------------------
+
+@uniform_block vsParams VSParams
+    @uniform mat4 mvp ModelViewProj
+    @uniform mat4 mv ModelView
+    @uniform float time Time
+@end
+
+//------------------------------------------------------------------------------
+@vs vs
+@use_uniform_block vsParams
+@in vec4 position
+@in vec4 normal
+@in vec4 instance0
+@in vec4 instance1
+@out vec4 nrm
+{
+//    vec4 orig = vec4(instance0.x, 0.0, instance0.y, 1.0);
+    vec4 dir  = vec4(instance0.z, 0.0, instance0.w, 0.0);
+//    float startTime = instance1.x;
+    float tileIndex = instance1.y;
+
+    float l = (time * 3.0) - tileIndex;
+    if (l >= 0.0) {
+        vec4 post = vec4(0.0, 0.0, -floor(l), 0.0);
+        vec4 p = vec4(position.x, 0.0, position.y, 1.0);
+        vec4 pos, norm;
+//        if ((tileIndex < 0.5) || (tileIndex > 8.5)) {
+            vec4 pre = dir * 0.5;
+            p += pre;
+
+            const float pi = 3.14159265359;
+            float t = mod(l, 1.0);
+            float c = cos(t * pi);
+            float s = sin(t * pi);
+            mat4 m = mat4(vec4(1.0, 0.0, 0.0, 0.0),
+                          vec4(0.0,   c,  -s, 0.0),
+                          vec4(0.0,   s,   c, 0.0),
+                          vec4(0.0, 0.0, 0.0, 1.0));
+            pos = mul(m, p) + pre;
+            norm = mul(m, normal);
+/*
+        }
+        else {
+            pos = p;
+            norm = normal;
+        }
+*/
+        pos += post;
+        _position = mul(mvp, pos);
+        nrm = mul(mv, norm);
+    }
+    else {
+        _position = vec4(0.0, 0.0, 0.0, 1.0);
+        nrm = vec4(1.0, 0.0, 0.0, 0.0);
+    }
+}
+@end
+
+//------------------------------------------------------------------------------
+@fs fs
+@in vec4 nrm
+{
+    _color = abs(nrm);
+}
+@end
+
+//------------------------------------------------------------------------------
+@bundle Main
+@program vs fs
+@end

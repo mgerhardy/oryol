@@ -1,0 +1,6 @@
+fips_begin_app(SquarePusher windowed)
+    fips_vs_warning_level(3)
+    fips_files(SquarePusher.cc)
+    oryol_shader(shaders.shd)
+    fips_deps(Gfx Assets)
+fips_end_app()
